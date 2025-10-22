@@ -140,8 +140,8 @@ function randomize() {
 
 <style lang="scss">
 html {
-  background-color: #161628;
-  color: #eee;
+  background-color: #161628; // #e8e8f0
+  color: #eee; // #111
   font-family: 'Arial', sans-serif;
 }
 
@@ -149,10 +149,8 @@ html {
   display: flex;
   flex-direction: column;
   gap: 2em;
-  height: 100vh;
   width: 100vw;
   align-items: center;
-  justify-content: center;
   padding: 2em;
   box-sizing: border-box;
 }
