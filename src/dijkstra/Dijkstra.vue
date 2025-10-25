@@ -25,12 +25,20 @@ const graph = ref(defaultGraph)
 const start = ref('A')
 const end = ref('D')
 
+const isLightTheme = ref(false)
+
 const { next, prev, reset, state } = useDijkstra(graph.value, start.value, end.value)
 
 const speed = ref(500)
 
+function toggleTheme() {
+  isLightTheme.value = !isLightTheme.value
+  const html = document.documentElement
+  isLightTheme.value ? html.classList.add('light-theme') : html.classList.remove('light-theme')
+}
+
 const visited = computed(() =>
-  Object.keys(graph.value.vertices).filter((v) => !state.value.unvisted.has(v)),
+  Object.keys(graph.value.vertices).filter((v) => !state.value.unvisted.includes(v)),
 )
 
 function sleep(ms: number) {
@@ -80,6 +88,10 @@ watch(() => graph.value, handleResetDijkstra, { deep: true })
 <template>
   <div class="container">
     <h1>Dijkstra Algorithm Demo</h1>
+
+    <button @click="toggleTheme">
+      {{ isLightTheme ? 'Light Theme' : 'Dark Theme' }}
+    </button>
 
     <div class="weights">
       <h3>Edge Weights</h3>
@@ -159,9 +171,14 @@ watch(() => graph.value, handleResetDijkstra, { deep: true })
 
 <style lang="scss">
 html {
-  background-color: #161628; // #e8e8f0
-  color: #eee; // #111
+  background-color: #161628; // Default dark theme background
+  color: #eee; // Default dark theme text color
   font-family: 'Arial', sans-serif;
+
+  &.light-theme {
+    background-color: #f2f2f5; // Light theme background
+    color: #333; // Light theme text color
+  }
 }
 
 .container {
@@ -171,7 +188,64 @@ html {
   width: 100vw;
   align-items: center;
   padding: 2em;
+  padding-bottom: 4em;
   box-sizing: border-box;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  color: #00aaff; // Accent color for dark theme
+  margin-bottom: 1em;
+
+  .light-theme & {
+    color: #005fa3; // Accent color for light theme
+  }
+}
+
+.start-end-control {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  background: #1e1e3f; // Dark theme background
+  padding: 1em;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+
+  label {
+    font-size: 1rem;
+    font-weight: bold;
+  }
+
+  select {
+    padding: 0.5em;
+    font-size: 1rem;
+    border: 1px solid #0077cc;
+    border-radius: 8px;
+    background: #2a2a4f; // Dark theme select background
+    color: #fff;
+    cursor: pointer;
+
+    &:hover {
+      border-color: #005fa3;
+    }
+  }
+
+  .light-theme & {
+    background: #e8e8f0; // Light theme background
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+    select {
+      background: #fff; // Light theme select background
+      color: #333;
+      border: 1px solid #005fa3;
+
+      &:hover {
+        border-color: #003f7f;
+      }
+    }
+  }
 }
 
 .controls {
@@ -191,10 +265,19 @@ button {
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-}
 
-button:hover {
-  background-color: #005fa3;
+  &:hover {
+    background-color: #005fa3;
+  }
+
+  .light-theme & {
+    background-color: #005fa3;
+    color: #fff;
+
+    &:hover {
+      background-color: #003f7f;
+    }
+  }
 }
 
 .speed-control {
@@ -212,21 +295,33 @@ input[type='range'] {
   border-radius: 5px;
   outline: none;
   transition: background 0.3s ease;
-}
 
-input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  background: #fff;
-  border: 2px solid #0077cc;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 2px solid #0077cc;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
 
-input[type='range']:hover {
-  background: #005fa3;
+  &:hover {
+    background: #005fa3;
+  }
+
+  .light-theme & {
+    background: #005fa3;
+
+    &::-webkit-slider-thumb {
+      border-color: #003f7f;
+    }
+
+    &:hover {
+      background: #003f7f;
+    }
+  }
 }
 
 .weights {
@@ -236,11 +331,20 @@ input[type='range']:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   width: 100%;
   max-width: 600px;
-}
 
-.weights h3 {
-  margin-bottom: 1em;
-  color: #00aaff;
+  h3 {
+    margin-bottom: 1em;
+    color: #00aaff;
+
+    .light-theme & {
+      color: #005fa3;
+    }
+  }
+
+  .light-theme & {
+    background: #e8e8f0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .weight-item {
@@ -255,19 +359,27 @@ input[type='range']:hover {
   flex-wrap: wrap;
   gap: 0.5em;
   justify-content: center;
-}
 
-.visited h3 {
-  width: 100%;
-  text-align: center;
-  color: #00aaff;
-}
+  h3 {
+    width: 100%;
+    text-align: center;
+    color: #00aaff;
 
-.visited-node {
-  background: #0077cc;
-  color: #fff;
-  padding: 0.5em 1em;
-  border-radius: 8px;
+    .light-theme & {
+      color: #005fa3;
+    }
+  }
+
+  .visited-node {
+    background: #0077cc;
+    color: #fff;
+    padding: 0.5em 1em;
+    border-radius: 8px;
+
+    .light-theme & {
+      background: #005fa3;
+    }
+  }
 }
 
 .distance-table {
@@ -275,25 +387,41 @@ input[type='range']:hover {
   max-width: 600px;
   border-collapse: collapse;
   margin-top: 1em;
-}
 
-.distance-table th,
-.distance-table td {
-  padding: 0.8em;
-  text-align: center;
-  border: 1px solid #0077cc;
-}
+  th,
+  td {
+    padding: 0.8em;
+    text-align: center;
+    border: 1px solid #0077cc;
 
-.distance-table th {
-  background: #0077cc;
-  color: #fff;
-}
+    .light-theme & {
+      border-color: #005fa3;
+    }
+  }
 
-.distance-table tr:nth-child(even) {
-  background: #1e1e3f;
-}
+  th {
+    background: #0077cc;
+    color: #fff;
 
-.distance-table tr:nth-child(odd) {
-  background: #2a2a4f;
+    .light-theme & {
+      background: #005fa3;
+    }
+  }
+
+  tr:nth-child(even) {
+    background: #1e1e3f;
+
+    .light-theme & {
+      background: #f2f2f5;
+    }
+  }
+
+  tr:nth-child(odd) {
+    background: #2a2a4f;
+
+    .light-theme & {
+      background: #e8e8f0;
+    }
+  }
 }
 </style>

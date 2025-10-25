@@ -21,7 +21,7 @@ export interface Graph {
 export type Distances = Record<Id, number>
 
 export interface DijkstraState {
-  unvisted: Set<Id>
+  unvisted: Array<Id>
   distances: Distances
   previous: Record<Id, Id | null>
 
@@ -43,7 +43,7 @@ function initDijkstra(graph: Graph, start: Id): DijkstraState {
   }
 
   const state: DijkstraState = {
-    unvisted: new Set(Object.keys(graph.vertices)),
+    unvisted: Object.keys(graph.vertices),
     distances: initDistances(graph, start),
     previous: { [start]: null },
 
@@ -62,12 +62,12 @@ export function useDijkstra(initGraph: Graph, initStart: Id, initEnd: Id) {
   const end = ref<Id>(initEnd)
   const graph = ref<Graph>(initGraph)
   const state = ref<DijkstraState>(initDijkstra(initGraph, start.value))
-  const { history, undo, clear, batch } = useRefHistory(state, { deep: true, flush: 'sync' })
+  const { undo, clear, batch, pause, resume } = useRefHistory(state, { deep: true, flush: 'sync' })
 
   /// returns true if the algorithm is done, otherwise false
   function next(): boolean {
     // 1. check if we are done
-    if (!state.value.unvisted.has(end.value)) {
+    if (!state.value.unvisted.includes(end.value)) {
       if (!state.value.isDone) {
         batch(() => {
           state.value.isDone = true
@@ -105,7 +105,7 @@ export function useDijkstra(initGraph: Graph, initStart: Id, initEnd: Id) {
       batch(() => {
         state.value.currentVertex = minimal
         state.value.edgesLeft = connections
-        state.value.unvisted.delete(minimal)
+        state.value.unvisted = state.value.unvisted.filter((u) => u !== minimal)
       })
 
       return false
@@ -158,11 +158,23 @@ export function useDijkstra(initGraph: Graph, initStart: Id, initEnd: Id) {
     clear()
   }
 
+  function prev() {
+    undo()
+    pause()
+    const keys = Object.keys(state.value.distances)
+    keys.forEach((key) => {
+      if (state.value.distances[key] === null) {
+        state.value.distances[key] = Infinity
+      }
+    })
+    resume()
+  }
+
   return {
     state,
     start,
     end,
-    prev: undo,
+    prev,
     next,
     reset,
   }
