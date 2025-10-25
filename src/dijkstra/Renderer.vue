@@ -39,7 +39,10 @@ function draw() {
       (currentEdge?.to === edge.from && currentEdge?.from === edge.to)
     ) {
       color = '#ff6b6b' // current edge
-    } else if (props.state.previous[edge.to] === edge.from) {
+    } else if (
+      props.state.previous[edge.to] === edge.from ||
+      props.state.previous[edge.from] === edge.to
+    ) {
       color = '#00b894' // shortest path edge
     }
 
@@ -96,6 +99,8 @@ function draw() {
 onMounted(draw)
 watch(() => props.state, draw, { deep: true })
 watch(() => props.graph, draw, { deep: true })
+watch(() => props.start, draw)
+watch(() => props.end, draw)
 </script>
 
 <template>

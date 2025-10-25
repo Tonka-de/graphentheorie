@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useDijkstra, type Edge, type Graph } from '../dijkstra.composable'
 import Renderer from './Renderer.vue'
 
@@ -9,7 +9,7 @@ const defaultGraph: Graph = {
     { from: 'A', to: 'C', cost: 1 },
     { from: 'B', to: 'C', cost: 3 },
     { from: 'B', to: 'D', cost: 2 },
-    { from: 'C', to: 'D', cost: 10 },
+    { from: 'C', to: 'D', cost: 8 },
     { from: 'C', to: 'E', cost: 3 },
   ],
   vertices: {
@@ -22,8 +22,10 @@ const defaultGraph: Graph = {
 }
 
 const graph = ref(defaultGraph)
+const start = ref('A')
+const end = ref('D')
 
-const { end, next, prev, reset, start, state } = useDijkstra(graph.value, 'A', 'D')
+const { next, prev, reset, state } = useDijkstra(graph.value, start.value, end.value)
 
 const speed = ref(500)
 
@@ -43,12 +45,14 @@ async function runToEnd() {
 }
 
 function handleResetDijkstra() {
-  reset(graph.value, 'A', 'D')
+  reset(graph.value, start.value, end.value)
 }
 
 function handleResetAll() {
   graph.value = defaultGraph
-  reset(graph.value, 'A', 'D')
+  start.value = 'A'
+  end.value = 'D'
+  reset(graph.value, start.value, end.value)
 }
 
 function updateCost(edge: Edge, event: Event) {
@@ -67,10 +71,47 @@ function randomize() {
     cost: Math.floor(Math.random() * 11),
   }))
 }
+
+watch(() => start.value, handleResetDijkstra)
+watch(() => end.value, handleResetDijkstra)
+watch(() => graph.value, handleResetDijkstra, { deep: true })
 </script>
 
 <template>
   <div class="container">
+    <h1>Dijkstra Algorithm Demo</h1>
+
+    <div class="weights">
+      <h3>Edge Weights</h3>
+      <div v-for="(edge, index) in graph.edges" class="weight-item">
+        <input type="range" min="0" max="9" @change="updateCost(edge, $event)" :value="edge.cost" />
+        <div>
+          From <b>{{ edge.from }}</b> to <b>{{ edge.to }}</b
+          >: {{ edge.cost }} Cost
+        </div>
+      </div>
+    </div>
+
+    <div class="start-end-control">
+      <label for="start">Start:</label>
+      <select v-model="start" id="start" name="start">
+        <option v-for="vertex in graph.vertices" :value="vertex.id" :disabled="vertex.id === end">
+          {{ vertex.id }}
+        </option>
+      </select>
+      <label for="end">End:</label>
+      <select v-model="end" id="end" name="end">
+        <option v-for="vertex in graph.vertices" :value="vertex.id" :disabled="vertex.id === start">
+          {{ vertex.id }}
+        </option>
+      </select>
+    </div>
+
+    <div class="speed-control">
+      <label for="speed">Speed: {{ speed }}ms</label>
+      <input id="speed" type="range" min="0" max="2000" v-model="speed" />
+    </div>
+
     <div class="controls">
       <button @click="randomize">Randomize Weights</button>
       <button @click="runToEnd">Run to End</button>
@@ -80,29 +121,7 @@ function randomize() {
       <button @click="handleResetAll">Reset All</button>
     </div>
 
-    <div class="speed-control">
-      <label for="speed">Speed: {{ speed }}ms</label>
-      <input id="speed" type="range" min="0" max="2000" v-model="speed" />
-    </div>
-
-    <div class="weights">
-      <h3>Edge Weights</h3>
-      <div v-for="(edge, index) in graph.edges" class="weight-item">
-        <input
-          type="range"
-          min="0"
-          max="10"
-          @change="updateCost(edge, $event)"
-          :value="edge.cost"
-        />
-        <div>
-          From <b>{{ edge.from }}</b> to <b>{{ edge.to }}</b
-          >: {{ edge.cost }} Cost
-        </div>
-      </div>
-    </div>
-
-    <Renderer :graph="graph" :state="state" start="A" end="D" />
+    <Renderer :graph="graph" :state="state" :start="start" :end="end" />
 
     <div class="visited">
       <h3>Visited Nodes</h3>

@@ -1,5 +1,5 @@
 import { useRefHistory } from '@vueuse/core'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 export type Id = string
 
@@ -62,7 +62,7 @@ export function useDijkstra(initGraph: Graph, initStart: Id, initEnd: Id) {
   const end = ref<Id>(initEnd)
   const graph = ref<Graph>(initGraph)
   const state = ref<DijkstraState>(initDijkstra(initGraph, start.value))
-  const { undo, clear, batch } = useRefHistory(state, { deep: true, flush: 'sync' })
+  const { history, undo, clear, batch } = useRefHistory(state, { deep: true, flush: 'sync' })
 
   /// returns true if the algorithm is done, otherwise false
   function next(): boolean {
