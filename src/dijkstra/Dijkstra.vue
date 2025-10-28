@@ -288,7 +288,7 @@ button {
 }
 
 input[type='range'] {
-  -webkit-appearance: none;
+  appearance: none;
   width: 200px;
   height: 8px;
   background: #0077cc;
